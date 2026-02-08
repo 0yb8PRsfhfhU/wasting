@@ -56,8 +56,7 @@ impl SpeedLimit {
 }
 
 fn resolve_dynamic(points: &[DynamicSpeedLimitPoint]) -> anyhow::Result<u64> {
-    let now = time::OffsetDateTime::now_local()
-        .unwrap_or_else(|_| time::OffsetDateTime::now_utc());
+    let now = time::OffsetDateTime::now_local().unwrap_or_else(|_| time::OffsetDateTime::now_utc());
     let current_time = now.time();
 
     // Find the last point where point.time <= current_time (step function).
@@ -84,7 +83,10 @@ pub fn load_config(path: &Path) -> anyhow::Result<ServiceConfig> {
     let config: ServiceConfig = toml::from_str(&content)
         .map_err(|e| anyhow::anyhow!("failed to parse config file {}: {e}", path.display()))?;
 
-    anyhow::ensure!(!config.source.is_empty(), "config must have at least one source");
+    anyhow::ensure!(
+        !config.source.is_empty(),
+        "config must have at least one source"
+    );
     anyhow::ensure!(config.lambda > 0.0, "lambda must be positive");
 
     Ok(config)

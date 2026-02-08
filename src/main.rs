@@ -87,8 +87,8 @@ fn parse_args() -> anyhow::Result<PathBuf> {
 /// Pick a random source weighted by `source.weight`.
 fn pick_source(config: &ServiceConfig) -> anyhow::Result<&config::Source> {
     let weights: Vec<f64> = config.source.iter().map(|s| s.weight).collect();
-    let dist = WeightedIndex::new(&weights)
-        .map_err(|e| anyhow::anyhow!("invalid source weights: {e}"))?;
+    let dist =
+        WeightedIndex::new(&weights).map_err(|e| anyhow::anyhow!("invalid source weights: {e}"))?;
     let mut rng = rand::rng();
     let idx = rng.sample(dist);
     // Safety: idx is always in bounds since WeightedIndex produces valid indices.
