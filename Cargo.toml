@@ -19,4 +19,14 @@ url = { version = "2.5", features = ["serde"] }
 [dependencies.reqwest]
 version = "0.13"
 default-features = false
-features = ["native-tls-vendored", "http2", "charset", "gzip", "brotli", "zstd", "deflate", "query", "stream"]
+features = [
+    "native-tls-vendored",
+    "http2",
+    "charset",
+    "gzip",
+    "brotli",
+    "zstd",
+    "deflate",
+    "query",
+    "stream",
+]
