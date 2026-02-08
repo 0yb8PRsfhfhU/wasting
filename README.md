@@ -8,8 +8,8 @@ A traffic quota wasting tool that downloads files from somewhere and discard the
 wasting [-c <config_path>]
 ```
 
-| Flag | Description | Default |
-|------|-------------|---------|
+| Flag | Description                  | Default       |
+|------|------------------------------|---------------|
 | `-c` | Path to the TOML config file | `config.toml` |
 
 Send `SIGHUP` to hot-reload the configuration without restarting:
@@ -54,6 +54,7 @@ WantedBy=multi-user.target
 ```
 
 Adjust the paths according to your installation:
+
 - `ExecStart`: Path to the `wasting` binary
 - `WorkingDirectory` and `-c` flag: Location of your config file
 - `User`/`Group`: Service account (default `nobody:nogroup`)
@@ -106,18 +107,18 @@ url = "https://example.com/large-file.iso"
 
 ### Reference
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `lambda` | float | yes | Parameter of the exponential distribution used to determine source-switching intervals (in seconds). Smaller values produce longer average intervals. |
-| `source` | array of tables | yes | At least one download source. |
-| `speed_limit` | table | no | Optional speed limit for downloads. |
+| Field         | Type            | Required | Description                                                                                                                                           |
+|---------------|-----------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `lambda`      | float           | yes      | Parameter of the exponential distribution used to determine source-switching intervals (in seconds). Smaller values produce longer average intervals. |
+| `source`      | array of tables | yes      | At least one download source.                                                                                                                         |
+| `speed_limit` | table           | no       | Optional speed limit for downloads.                                                                                                                   |
 
 #### `[[source]]`
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `url` | string | yes | -- | URL to download from. |
-| `weight` | float | no | `1.0` | Relative weight for random source selection. Higher weight means more likely to be picked. |
+| Field    | Type   | Required | Default | Description                                                                                |
+|----------|--------|----------|---------|--------------------------------------------------------------------------------------------|
+| `url`    | string | yes      | --      | URL to download from.                                                                      |
+| `weight` | float  | no       | `1.0`   | Relative weight for random source selection. Higher weight means more likely to be picked. |
 
 #### `[speed_limit]`
 
@@ -146,12 +147,16 @@ time = "08:00:00"       # 08:00 onward -> 10 MB/s
 speed_limit = 10485760
 ```
 
-The speed limit active at any moment is the one from the most recent time point at or before the current local time. If the current time is before all listed points, it wraps around to the last point (carry-over from the previous day).
+The speed limit active at any moment is the one from the most recent time point at or before the current local time. If
+the current time is before all listed points, it wraps around to the last point (carry-over from the previous day).
+
+Set to 0 to pause the downloading when using dynamic speed limit. For static speed limit, setting to 0 is not allowed.
 
 ## How it works
 
 1. A source is randomly chosen (weighted by `weight`).
 2. A switch interval is sampled from `Exp(lambda)` and clamped to [10 seconds, 1 week].
 3. The file is streamed and discarded. Compression (gzip, brotli, zstd, deflate) is negotiated automatically.
-4. When the switch timer expires, the download is cancelled and a new source is picked. If the download errors out, it switches immediately.
+4. When the switch timer expires, the download is cancelled and a new source is picked. If the download errors out, it
+   switches immediately.
 5. On `SIGHUP`, the config is reloaded and the current download is interrupted.
