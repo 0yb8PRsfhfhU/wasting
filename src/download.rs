@@ -52,6 +52,17 @@ async fn throttle(
 ) -> anyhow::Result<()> {
     let limit_bps = limit.resolve()?;
     if limit_bps == 0 {
+        // Speed 0 means "no downloading" – sleep and re-check until
+        // the dynamic limit becomes non-zero.
+        loop {
+            tokio::time::sleep(Duration::from_secs(1)).await;
+            let new_limit = limit.resolve()?;
+            if new_limit > 0 {
+                *window_start = Instant::now();
+                *window_bytes = 0;
+                break;
+            }
+        }
         return Ok(());
     }
 

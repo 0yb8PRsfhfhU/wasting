@@ -89,5 +89,15 @@ pub fn load_config(path: &Path) -> anyhow::Result<ServiceConfig> {
     );
     anyhow::ensure!(config.lambda > 0.0, "lambda must be positive");
 
+    match &config.speed_limit {
+        Some(SpeedLimit::Static(0)) => {
+            anyhow::bail!("static speed limit must not be 0");
+        }
+        Some(SpeedLimit::Dynamic(points)) if points.iter().all(|p| p.speed_limit == 0) => {
+            anyhow::bail!("dynamic speed limit must have at least one point with a non-zero speed");
+        }
+        _ => {}
+    }
+
     Ok(config)
 }
