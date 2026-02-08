@@ -18,6 +18,81 @@ Send `SIGHUP` to hot-reload the configuration without restarting:
 kill -HUP <pid>
 ```
 
+## Running as a systemd service
+
+To run `wasting` as a background service that starts automatically on boot:
+
+### 1. Create a service unit file
+
+Create `/etc/systemd/system/wasting.service`:
+
+```ini
+[Unit]
+Description=Wasting - Traffic Quota Wasting Tool
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nobody
+Group=nogroup
+WorkingDirectory=/opt/wasting
+ExecStart=/usr/local/bin/wasting -c /opt/wasting/config.toml
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=10s
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/wasting
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Adjust the paths according to your installation:
+- `ExecStart`: Path to the `wasting` binary
+- `WorkingDirectory` and `-c` flag: Location of your config file
+- `User`/`Group`: Service account (default `nobody:nogroup`)
+
+### 2. Install and enable the service
+
+```bash
+# Reload systemd to recognize the new service
+sudo systemctl daemon-reload
+
+# Enable the service to start on boot
+sudo systemctl enable wasting
+
+# Start the service now
+sudo systemctl start wasting
+```
+
+### 3. Manage the service
+
+```bash
+# Check service status
+sudo systemctl status wasting
+
+# View logs
+sudo journalctl -u wasting -f
+
+# Reload configuration (sends SIGHUP)
+sudo systemctl reload wasting
+
+# Restart the service
+sudo systemctl restart wasting
+
+# Stop the service
+sudo systemctl stop wasting
+
+# Disable auto-start on boot
+sudo systemctl disable wasting
+```
+
 ## Configuration
 
 The config file is TOML. A minimal example:
